@@ -1,0 +1,12 @@
+import redis
+
+# Подключение к Redis
+client = redis.StrictRedis(host='localhost', port=6379)
+
+# Получение всех ключей
+keys = client.keys('*')
+
+# Получение значений для каждого ключа
+for key in keys:
+    value = client.get(key)
+    print(f"{key.decode('utf-8')}: {value.decode('utf-8')}")
