@@ -6,6 +6,8 @@ class Contact(Document):
     email = StringField()
     is_sent = BooleanField(default=False)
     adress = StringField()
+    phone = StringField()
+    sending_method = StringField()
     
     
     

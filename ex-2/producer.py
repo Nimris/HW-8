@@ -20,10 +20,10 @@ def main():
         contact = Contact(name=f"Contact {i + 1}", email=f"{faker.Faker().email()}", is_sent=False, adress=f"{faker.Faker().address()}")
         contact.save()
     
-    for contact in Contact.objects:
+    for contact in Contact.objects(is_sent=False):
         if contact.is_sent:
             continue
-        message = {"id": str(contact.id)}
+        message = {"contact_id": str(contact.id)}
         
         channel.basic_publish(
             exchange='email_sender',

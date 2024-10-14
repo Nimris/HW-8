@@ -1,5 +1,5 @@
+import json
 import pika
-import time
 from model import Contact
 from mongoengine import connect
 
@@ -14,19 +14,36 @@ channel.queue_declare(queue='m_queue', durable=True)
 print('[*] Waiting for messages. To exit press CTRL+C')
 
     
-def sent_email(contact_email):
-    time.sleep(1)
+def send_email(contact_email):
     print(f"Email sent to {contact_email}")
-
+    
+    
 def callback(ch, method, properties, body):
-    message = body
-    print(f"[x] Received {message}")
-    contact = Contact.objects.first()
-    if contact:
-        sent_email(contact.email)
-        contact.update(is_sent=True)
+    try:
+        message = json.loads(body.decode())
+        print(f"[x] Received: {message}")
+
+        contact_id = message.get("contact_id") or message.get("id")
+        if not contact_id:
+            print("[!] No contact ID in message")
+            return
+
+        contact = Contact.objects(id=contact_id).first()
+        if contact:
+            send_email(contact.email)
+            contact.update(is_sent=True)
+        else:
+            print("[!] Contact not found")
+
+    except json.JSONDecodeError:
+        print("[!] Failed to decode message")
+    except Exception as e:
+        print(f"[!] Error: {e}")
+        
+        
     print(f"[x] Done: {method.delivery_tag}")
     ch.basic_ack(delivery_tag=method.delivery_tag)
+    
 
 channel.basic_qos(prefetch_count=1)
 channel.basic_consume(queue='m_queue', on_message_callback=callback)
